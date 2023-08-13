@@ -10,12 +10,12 @@ function ItemsList({ path }: ItemsListProps) {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    axios.get(`https://${process.env.REACT_APP_SERVER_AUTHORITY}/api/items/${path}`)
+    axios.get(`${process.env.REACT_APP_SERVER_URL}/api/items/${path}`)
       .then(response => {
-        setItems(response.data)
+        setItems(response.data['items'])
       })
       .catch(err => console.log(err));
-  })
+  }, [])
 
   return (
     <div>
@@ -24,7 +24,7 @@ function ItemsList({ path }: ItemsListProps) {
       <div>
         <button
          onClick={() => {
-          axios.post(`https://${process.env.REACT_APP_SERVER_AUTHORITY}/api/items/${path}`, {
+          axios.post(`${process.env.REACT_APP_SERVER_URL}/api/items/${path}`, {
             "item_name": "asdf",
           },
           {
@@ -34,7 +34,7 @@ function ItemsList({ path }: ItemsListProps) {
           }
           ).catch(err => console.log(err));
         }}>+</button>
-        {items.map(e => <p key={e}>e</p>)}
+        {items.map(e => <p key={e['item_id']}>{e['item_name']}</p>)}
       </div>
     </div>
   );

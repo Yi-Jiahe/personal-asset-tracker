@@ -30,7 +30,7 @@ func (m ItemModel) RetrieveItems() ([]Item, error) {
 	}
 	defer rows.Close()
 
-	var items []Item
+	items := []Item{}
 	for rows.Next() {
 		var item Item
 

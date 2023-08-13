@@ -7,7 +7,14 @@ jest.mock("axios");
 const axiosMocked = axios as jest.Mocked<typeof axios>;
 
 test('Lists Items', () => {
-  axiosMocked.get.mockResolvedValueOnce(["potato"]);
+  axiosMocked.get.mockResolvedValueOnce({
+    "items": [
+      {
+        "item_id": 1234,
+        "item_name": "potato"
+      }
+    ]
+  });
 
   render(<ItemsList path="a/b/c" />);
 

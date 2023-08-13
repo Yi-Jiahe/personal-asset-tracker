@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"embed"
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -54,13 +53,15 @@ func main() {
 		items:  itemModel,
 	}
 
-	http.HandleFunc("/api/items/", makeHandler(app.itemHandler))
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/api/items/", makeHandler(app.itemHandler))
 
 	dist, _ := fs.Sub(web, "web/build")
-	http.Handle("/", http.FileServer(http.FS(dist)))
+	mux.Handle("/", http.FileServer(http.FS(dist)))
 
 	app.logger.Printf("Server listening on %s", port)
-	app.logger.Fatal(http.ListenAndServe(":"+port, nil))
+	app.logger.Fatal(http.ListenAndServe(":"+port, mux))
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
@@ -71,7 +72,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 
 func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 	itemPath := strings.TrimPrefix(r.URL.Path, "/api/items/")
-	fmt.Printf("%s", itemPath)
+	app.logger.Printf("%s", itemPath)
 
 	switch r.Method {
 	case "GET":
@@ -96,5 +97,4 @@ func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 			app.logger.Panic("Unable to parse request body")
 		}
 	}
-
 }
