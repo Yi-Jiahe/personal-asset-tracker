@@ -6,9 +6,8 @@
 
 tasks:
   - init: |
-      npm install
-      npm run build
-      go get && go build ./... && go test ./...
+      cd web && npm install && npm run build
+      cd .. && go get && go build ./... && go test ./...
     command: go run .
 
 
