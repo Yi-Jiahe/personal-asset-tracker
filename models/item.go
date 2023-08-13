@@ -3,8 +3,8 @@ package models
 import "database/sql"
 
 type Item struct {
-	item_id   int    `json:"item_id"`
-	item_name string `json:"item_name"`
+	Item_id   int    `json:"item_id"`
+	Item_name string `json:"item_name"`
 }
 
 type ItemModel struct {
@@ -34,7 +34,7 @@ func (m ItemModel) RetrieveItems() ([]Item, error) {
 	for rows.Next() {
 		var item Item
 
-		err := rows.Scan(&item.item_id, &item.item_name)
+		err := rows.Scan(&item.Item_id, &item.Item_name)
 		if err != nil {
 			return nil, err
 		}
