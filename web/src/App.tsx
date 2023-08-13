@@ -1,26 +1,26 @@
 import React from 'react';
-import logo from './logo.svg';
+import logo from './logo.svg'
 import './App.css';
+import { Layout } from 'antd';
+import ItemsList from './ItemsList';
+
+const { Header, Content, Footer } = Layout;
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Layout style={{ display: 'flex', height: '100vh' }}>
+      <Header style={{ display: 'flex', alignItems: 'center' }}>
+        <img src={logo} style={{ height: 50, aspectRatio: 1 }} alt='logo' />
+        Header
+      </Header>
+      <Content>
+        <ItemsList path="Home/Doujin/Hololive" />
+      </Content>
+      <Footer style={{ textAlign: 'right' }}>Footer</Footer>
+    </Layout>
   );
 }
+
+
 
 export default App;
