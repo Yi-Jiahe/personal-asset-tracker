@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -52,7 +54,7 @@ func main() {
 		items:  itemModel,
 	}
 
-	http.HandleFunc("/api/item", makeHandler(app.getHandler))
+	http.HandleFunc("/api/items/", makeHandler(app.itemHandler))
 
 	dist, _ := fs.Sub(web, "web/build")
 	http.Handle("/", http.FileServer(http.FS(dist)))
@@ -67,26 +69,32 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	}
 }
 
-func (app *Application) getHandler(w http.ResponseWriter, r *http.Request) {
-	items, err := app.items.RetrieveItems()
-	if err != nil {
-		app.logger.Panic(err)
+func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
+	itemPath := strings.TrimPrefix(r.URL.Path, "/api/items/")
+	fmt.Printf("%s", itemPath)
+
+	switch r.Method {
+	case "GET":
+		items, err := app.items.RetrieveItems()
+		if err != nil {
+			app.logger.Panic(err)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(map[string]interface{}{
+			"items": items,
+		})
+		if err != nil {
+			app.logger.Panic(err)
+		}
+		return
+	case "POST":
+		var item models.Item
+
+		err := json.NewDecoder(r.Body).Decode(&item)
+		if err != nil {
+			app.logger.Panic("Unable to parse request body")
+		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(map[string]interface{}{
-		"items": items,
-	})
-	if err != nil {
-		app.logger.Panic(err)
-	}
-}
-
-func (app *Application) putHandler(w http.ResponseWriter, r *http.Request) {
-	var item models.Item
-
-	err := json.NewDecoder(r.Body).Decode(&item)
-	if err != nil {
-		app.logger.Panic("Unable to parse request body")
-	}
 }

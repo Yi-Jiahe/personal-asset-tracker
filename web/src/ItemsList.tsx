@@ -10,7 +10,7 @@ function ItemsList({ path }: ItemsListProps) {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    axios.get('https://localhost:8080/api/items/' + path)
+    axios.get(`https://${process.env.REACT_APP_SERVER_AUTHORITY}/api/items/${path}`)
       .then(response => {
         setItems(response.data)
       })
@@ -21,7 +21,21 @@ function ItemsList({ path }: ItemsListProps) {
     <div>
       <Breadcrumb items={path.split('/').map(e => { return { title: e }; })}>
       </Breadcrumb>
-      <div>{items.map(e => <p key={e}>e</p>)}</div>
+      <div>
+        <button
+         onClick={() => {
+          axios.post(`https://${process.env.REACT_APP_SERVER_AUTHORITY}/api/items/${path}`, {
+            "item_name": "asdf",
+          },
+          {
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+          ).catch(err => console.log(err));
+        }}>+</button>
+        {items.map(e => <p key={e}>e</p>)}
+      </div>
     </div>
   );
 }
