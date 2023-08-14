@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Breadcrumb } from 'antd';
+import { Breadcrumb, Button, Upload, message } from 'antd';
 
 interface ItemsListProps {
   path: string
@@ -22,7 +22,7 @@ function ItemsList({ path }: ItemsListProps) {
       <Breadcrumb items={path.split('/').map(e => { return { title: e }; })}>
       </Breadcrumb>
       <div>
-        <button
+        <Button
          onClick={() => {
           axios.post(`${process.env.REACT_APP_SERVER_URL}/api/items/${path}`, {
             "item_name": "asdf",
@@ -33,7 +33,19 @@ function ItemsList({ path }: ItemsListProps) {
             }
           }
           ).catch(err => console.log(err));
-        }}>+</button>
+        }}>+</Button>
+        <Upload
+          name="items.csv"
+          action={`${process.env.REACT_APP_SERVER_URL}/api/upload`}
+          onChange={info => {
+            if (info.file.status === "done") {
+              message.success(info.file.response);
+            } else if (info.file.status === "error") {
+              console.log("Error uploading file")
+            }
+          }}>
+          <Button>Upload</Button>
+        </Upload>
         {items.map(e => <p key={e['item_id']}>{e['item_name']}</p>)}
       </div>
     </div>

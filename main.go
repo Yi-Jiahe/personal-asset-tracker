@@ -3,12 +3,15 @@ package main
 import (
 	"database/sql"
 	"embed"
+	"encoding/csv"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -55,19 +58,14 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/items/", makeHandler(app.itemHandler))
+	mux.HandleFunc("/api/items/", app.itemHandler)
+	mux.HandleFunc("/api/upload", app.csvHandler)
 
 	dist, _ := fs.Sub(web, "web/build")
 	mux.Handle("/", http.FileServer(http.FS(dist)))
 
 	app.logger.Printf("Server listening on %s", port)
 	app.logger.Fatal(http.ListenAndServe(":"+port, mux))
-}
-
-func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fn(w, r)
-	}
 }
 
 func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +76,9 @@ func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		items, err := app.items.RetrieveItems()
 		if err != nil {
-			app.logger.Panic(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			app.logger.Print(err)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -86,7 +86,9 @@ func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 			"items": items,
 		})
 		if err != nil {
-			app.logger.Panic(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			app.logger.Print(err)
+			return
 		}
 		return
 	case "POST":
@@ -94,16 +96,74 @@ func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := json.NewDecoder(r.Body).Decode(&item)
 		if err != nil {
-			app.logger.Panic("Unable to parse request body")
+			w.WriteHeader(http.StatusBadRequest)
+			app.logger.Print("Unable to parse request body")
 		}
 
 		app.logger.Printf("%+v", item)
 
 		err = app.items.CreateItem(item)
 		if err != nil {
-			app.logger.Panic(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			app.logger.Print(err)
 		}
 
+		return
+	}
+}
+
+func (app *Application) csvHandler(w http.ResponseWriter, r *http.Request) {
+	f, _, err := r.FormFile("items.csv")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		app.logger.Print(err)
+		return
+	}
+	defer f.Close()
+
+	reader := csv.NewReader(f)
+	reader.LazyQuotes = true
+
+	// TODO: Add flexibity to csv layout
+	headers, err := reader.Read()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		app.logger.Print(err)
+		return
+	}
+	fmt.Printf("%+v", headers)
+
+	items := []models.Item{}
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			app.logger.Print(err)
+			return
+		}
+
+		n := len(headers) - len(record)
+		if n > 0 {
+			record = append(record, make([]string, n)...)
+		}
+
+		item := models.Item{
+			Item_name: record[1],
+		}
+
+		items = append(items, item)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]interface{}{
+		"items": items,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.logger.Print(err)
 		return
 	}
 }
