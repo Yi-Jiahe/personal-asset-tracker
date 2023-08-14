@@ -6,7 +6,8 @@
 
 tasks:
   - init: |
-      REACT_APP_SERVER_URL=$(gp url 8080) cd web && npm install && npm run build
+      export REACT_APP_SERVER_URL=$(gp url 8080) && echo $REACT_APP_SERVER_URL
+      cd web && npm install && npm run build
       cd .. && go get && go build ./... && go test ./...
     command: go run .
 
