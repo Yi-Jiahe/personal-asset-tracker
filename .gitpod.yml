@@ -6,7 +6,8 @@
 
 tasks:
   - init: |
-      cd web && npm install && npm run build
+      gp ports expose 8080
+      REACT_APP_SERVER_URL=$(gp url 8080) cd web && npm install && npm run build
       cd .. && go get && go build ./... && go test ./...
     command: go run .
 
