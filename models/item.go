@@ -13,7 +13,7 @@ type ItemModel struct {
 
 func NewItemModel(db *sql.DB) (*ItemModel, error) {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS items (
-		item_id int,
+		item_id INTEGER PRIMARY KEY AUTOINCREMENT,
 		item_name string
 	)`)
 	if err != nil {
@@ -21,6 +21,16 @@ func NewItemModel(db *sql.DB) (*ItemModel, error) {
 	}
 
 	return &ItemModel{Db: db}, nil
+}
+
+func (m ItemModel) CreateItem(item Item) error {
+	_, err := m.Db.Exec(`INSERT INTO items (item_name)
+						VALUES ($1)`, item.Item_name)
+	if err != nil {
+		return err
+	}
+	
+	return nil
 }
 
 func (m ItemModel) RetrieveItems() ([]Item, error) {
@@ -48,7 +58,4 @@ func (m ItemModel) RetrieveItems() ([]Item, error) {
 	return items, nil
 }
 
-func (m ItemModel) CreateItem() (Item, error) {
-	// m.Db.Exec()
-	return Item{}, nil
-}
+

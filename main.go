@@ -96,5 +96,14 @@ func (app *Application) itemHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			app.logger.Panic("Unable to parse request body")
 		}
+
+		app.logger.Printf("%+v", item)
+
+		err = app.items.CreateItem(item)
+		if err != nil {
+			app.logger.Panic(err)
+		}
+
+		return
 	}
 }
